@@ -3,6 +3,7 @@
 #define LOG(argument) std::cout << argument << '\n'
 #define GL_GLEXT_PROTOTYPES 1
 #define FIXED_TIMESTEP 0.0166666f
+#define PLATFORM_COUNT 11
 #define ENEMY_COUNT 1
 #define LEVEL1_WIDTH 14
 #define LEVEL1_HEIGHT 5
@@ -29,6 +30,7 @@ struct GameState
 {
     Entity *player;
     Entity *enemies;
+    Entity *platforms;
     
     Map *map;
     
@@ -40,7 +42,7 @@ enum AppStatus { RUNNING, TERMINATED };
 
 // ————— CONSTANTS ————— //
 constexpr int WINDOW_WIDTH  = 640 * 2,
-          WINDOW_HEIGHT = 480 * 2;
+          WINDOW_HEIGHT = 700;
 
 constexpr float BG_RED     = 0.1922f,
             BG_BLUE    = 0.549f,
@@ -62,11 +64,15 @@ constexpr float MILLISECONDS_IN_SECOND = 1000.0;
 constexpr char SPRITESHEET_FILEPATH[] = "assets/images/george_0.png",
            MAP_TILESET_FILEPATH[] = "assets/images/tileset.png",
            BGM_FILEPATH[]         = "assets/audio/dooblydoo.mp3",
-           JUMP_SFX_FILEPATH[]    = "assets/audio/bounce.wav";
+           JUMP_SFX_FILEPATH[]    = "assets/audio/bounce.wav",
+           PLATFORM_FILEPATH[]    = "assets/images/platformPack_tile027.png",
+           ENEMY_FILEPATH[]       = "assets/images/soph.png";
 
 constexpr int NUMBER_OF_TEXTURES = 1;
 constexpr GLint LEVEL_OF_DETAIL  = 0;
 constexpr GLint TEXTURE_BORDER   = 0;
+
+constexpr float PLATFORM_OFFSET = 5.0f;
 
 unsigned int LEVEL_1_DATA[] =
 {
@@ -88,6 +94,7 @@ glm::mat4 g_view_matrix, g_projection_matrix;
 float g_previous_ticks = 0.0f,
       g_accumulator    = 0.0f;
 
+GLuint load_texture(const char* filepath);
 
 void initialise();
 void process_input();
@@ -162,6 +169,21 @@ void initialise()
     GLuint map_texture_id = load_texture(MAP_TILESET_FILEPATH);
     g_game_state.map = new Map(LEVEL1_WIDTH, LEVEL1_HEIGHT, LEVEL_1_DATA, map_texture_id, 1.0f, 4, 1);
     
+    // ––––– PLATFORM ––––– //
+    GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
+
+    g_game_state.platforms = new Entity[PLATFORM_COUNT];
+
+    float start_x = 6.0f; // Set the desired starting x position
+    float start_y = 2.0f; // Set the desired starting y position
+
+    for (int i = 0; i < PLATFORM_COUNT; i++) {
+        g_game_state.platforms[i] = Entity(platform_texture_id, 0.0f, 0.4f, 1.0f, PLATFORM);
+        g_game_state.platforms[i].set_position(glm::vec3(start_x + i, start_y, 0.0f));
+        g_game_state.platforms[i].update(0.0f, nullptr, nullptr, 0, g_game_state.map);
+    }
+
+    
     // ————— GEORGE SET-UP ————— //
 
     GLuint player_texture_id = load_texture(SPRITESHEET_FILEPATH);
@@ -203,6 +225,21 @@ void initialise()
 //    Mix_VolumeMusic(MIX_MAX_VOLUME / 16.0f);
     
     g_game_state.jump_sfx = Mix_LoadWAV(JUMP_SFX_FILEPATH);
+    
+    // ––––– SOPHIE ––––– //
+    GLuint enemy_texture_id = load_texture(ENEMY_FILEPATH);
+
+    g_game_state.enemies = new Entity[ENEMY_COUNT];
+
+    for (int i = 0; i < ENEMY_COUNT; i++)
+    {
+    g_game_state.enemies[i] =  Entity(enemy_texture_id, 1.0f, 1.0f, 1.0f, ENEMY, GUARD, IDLE);
+    }
+
+
+    g_game_state.enemies[0].set_position(glm::vec3(3.0f, 0.0f, 0.0f));
+    g_game_state.enemies[0].set_movement(glm::vec3(0.0f));
+    g_game_state.enemies[0].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
     
     // ————— BLENDING ————— //
     glEnable(GL_BLEND);
@@ -272,8 +309,14 @@ void update()
     
     while (delta_time >= FIXED_TIMESTEP)
     {
-        g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, NULL, 0, 
-                                    g_game_state.map);
+        g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
+
+        for (int i = 0; i < ENEMY_COUNT; i++)
+            g_game_state.enemies[i].update(FIXED_TIMESTEP,
+                                           g_game_state.player,
+                                           g_game_state.platforms,
+                                           PLATFORM_COUNT, g_game_state.map);
+
         delta_time -= FIXED_TIMESTEP;
     }
     
@@ -294,13 +337,19 @@ void render()
     g_game_state.player->render(&g_shader_program);
     g_game_state.map->render(&g_shader_program);
     
+    for (int i = 0; i < PLATFORM_COUNT; i++)
+            g_game_state.platforms[i].render(&g_shader_program);
+    for (int i = 0; i < ENEMY_COUNT; i++)
+        g_game_state.enemies[i].render(&g_shader_program);
+    
     SDL_GL_SwapWindow(g_display_window);
 }
 
 void shutdown()
-{    
+{
     SDL_Quit();
     
+    delete [] g_game_state.platforms;
     delete [] g_game_state.enemies;
     delete    g_game_state.player;
     delete    g_game_state.map;

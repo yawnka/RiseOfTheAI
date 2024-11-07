@@ -61,7 +61,7 @@ constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
 
 constexpr float MILLISECONDS_IN_SECOND = 1000.0;
 
-constexpr char SPRITESHEET_FILEPATH[] = "assets/images/george_0.png",
+constexpr char SPRITESHEET_FILEPATH[] = "assets/images/player0.png",
            MAP_TILESET_FILEPATH[] = "assets/images/tileset.png",
            BGM_FILEPATH[]         = "assets/audio/dooblydoo.mp3",
            JUMP_SFX_FILEPATH[]    = "assets/audio/bounce.wav",
@@ -190,10 +190,10 @@ void initialise()
 
     int player_walking_animation[4][4] =
     {
-        { 1, 5, 9, 13 },  // for George to move to the left,
-        { 3, 7, 11, 15 }, // for George to move to the right,
-        { 2, 6, 10, 14 }, // for George to move upwards,
-        { 0, 4, 8, 12 }   // for George to move downwards
+        { 0, 1, 2, 3 },  // for George to move to the left,
+        { 4, 5, 6, 7 }, // for George to move to the right,
+        { 8, 9, 10, 11 }, // for George to move upwards,
+        { 12, 13, 14, 15 }   // for George to move downwards
     };
 
     glm::vec3 acceleration = glm::vec3(0.0f,-4.905f, 0.0f);
@@ -209,10 +209,12 @@ void initialise()
         0,                         // current animation index
         4,                         // animation column amount
         4,                         // animation row amount
-        0.9f,                      // width
-        0.9f,                       // height
+        0.75f,                      // width (increase this value to scale up the player)
+        0.75f,                      // height (increase this value to scale up the player)
         PLAYER
     );
+    
+    g_game_state.player->m_visual_scale = 2.0f; // Scale the player to twice the size
 
 
     // Jumping

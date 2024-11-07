@@ -349,18 +349,29 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
 }
 
 
-void Entity::render(ShaderProgram* program)
-{
+void Entity::render(ShaderProgram* program) {
+    // Apply the scale transformation to the model matrix
+    m_model_matrix = glm::mat4(1.0f);
+    m_model_matrix = glm::translate(m_model_matrix, m_position);
+
+    // Scaling for visual size, without affecting the collision
+    m_model_matrix = glm::scale(m_model_matrix, glm::vec3(m_visual_scale, m_visual_scale, 1.0f));
+
     program->set_model_matrix(m_model_matrix);
 
-    if (m_animation_indices != NULL)
-    {
+    if (m_animation_indices != NULL) {
         draw_sprite_from_texture_atlas(program, m_texture_id, m_animation_indices[m_animation_index]);
         return;
     }
 
-    float vertices[] = { -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5 };
-    float tex_coords[] = { 0.0,  1.0, 1.0,  1.0, 1.0, 0.0,  0.0,  1.0, 1.0, 0.0,  0.0, 0.0 };
+    float vertices[] = {
+        -0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
+        -0.5, -0.5, 0.5, 0.5, -0.5, 0.5
+    };
+    float tex_coords[] = {
+        0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
+        0.0, 1.0, 1.0, 0.0, 0.0, 0.0
+    };
 
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
 

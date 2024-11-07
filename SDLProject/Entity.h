@@ -59,6 +59,7 @@ private:
 public:
     // ————— STATIC VARIABLES ————— //
     static constexpr int SECONDS_PER_FRAME = 4;
+    float m_visual_scale = 1.0f;
 
     // ————— METHODS ————— //
     Entity();

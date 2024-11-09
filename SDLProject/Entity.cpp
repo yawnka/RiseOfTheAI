@@ -13,22 +13,20 @@
 #include "ShaderProgram.h"
 #include "Entity.h"
 
-void Entity::ai_activate(Entity *player)
-{
-    switch (m_ai_type)
-    {
+void Entity::ai_activate(Entity *player) {
+    switch (m_ai_type) {
         case WALKER:
             ai_walk();
             break;
-            
         case GUARD:
             ai_guard(player);
             break;
-        
         case JUMPER:
             ai_jump();
             break;
-            
+        case PATROL:
+            ai_patrol();
+            break;
         default:
             break;
     }
@@ -71,6 +69,22 @@ void Entity::ai_jump() {
     }
 }
 
+void Entity::ai_patrol() {
+    if (m_ai_state != PATROLLING) return;  // Only activate if in the PATROLLING state
+    
+    // Move in the current facing direction
+    if (m_movement.x < 0) { // Moving left
+        m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+        if (m_collided_left) {
+            m_movement.x = 1.0f;  // Flip to move right
+        }
+    } else { // Moving right
+        m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+        if (m_collided_right) {
+            m_movement.x = -1.0f;  // Flip to move left
+        }
+    }
+}
 
 // Default constructor
 Entity::Entity()

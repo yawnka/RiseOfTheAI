@@ -281,16 +281,16 @@ void initialise()
         g_game_state.platforms[i].update(0.0f, nullptr, nullptr, 0, g_game_state.map);
     }
     
-    // ————— GEORGE SET-UP ————— //
+    // ————— PLAYER SET-UP ————— //
 
     GLuint player_texture_id = load_texture(SPRITESHEET_FILEPATH);
 
     int player_walking_animation[4][4] =
     {
-        { 0, 1, 2, 3 },  // for George to move to the left,
-        { 4, 5, 6, 7 }, // for George to move to the right,
-        { 8, 9, 10, 11 }, // for George to move upwards,
-        { 12, 13, 14, 15 }   // for George to move downwards
+        { 0, 1, 2, 3 },  // for PLAYER to move to the left,
+        { 4, 5, 6, 7 }, // for PLAYER to move to the right,
+        { 8, 9, 10, 11 }, // for PLAYER to move upwards,
+        { 12, 13, 14, 15 }   // for PLAYER to move downwards
     };
 
     glm::vec3 acceleration = glm::vec3(0.0f,-4.905f, 0.0f);
@@ -320,8 +320,8 @@ void initialise()
 
     int enemy_walking_animation[4][4] = {
         {8, 9, 10, 11}, // Left
-        {0, 1, 2, 3},   // Right
-        {8, 9, 10, 11}, // Up
+        {4, 5, 6, 7},   // Rights
+        {0, 1, 2, 3}, // Up
         {12, 13, 14, 15} // Down
     };
     glm::vec3 enemy_acceleration = glm::vec3(0.0f, -2.905f, 0.0f);
@@ -357,13 +357,16 @@ void initialise()
 
     //second enemy
     g_game_state.enemies[1].set_position(glm::vec3(10.45f, -2.125f, 0.0f));
+    g_game_state.enemies[1].set_ai_type(GUARD);
+    g_game_state.enemies[1].set_ai_state(IDLE);
+    g_game_state.enemies[1].set_movement(glm::vec3(0.0f));
+    g_game_state.enemies[1].set_speed(1.5f);
     
     //third enemy
     g_game_state.enemies[2].set_position(glm::vec3(19.95f, -5.125f, 0.0f));
-    g_game_state.enemies[2].set_ai_type(GUARD);
-    g_game_state.enemies[2].set_ai_state(IDLE);
-    g_game_state.enemies[2].set_movement(glm::vec3(0.0f));
-    //g_game_state.enemies[2].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
+    g_game_state.enemies[2].set_ai_type(PATROL);
+    g_game_state.enemies[2].set_ai_state(PATROLLING);
+    g_game_state.enemies[2].set_movement(glm::vec3(-1.0f, 0.0f, 0.0f));
     g_game_state.enemies[2].set_speed(1.5f);
     
 

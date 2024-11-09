@@ -357,10 +357,10 @@ void initialise()
 
     //second enemy
     g_game_state.enemies[1].set_position(glm::vec3(10.45f, -2.125f, 0.0f));
-    g_game_state.enemies[1].set_ai_type(GUARD);
-    g_game_state.enemies[1].set_ai_state(IDLE);
-    g_game_state.enemies[1].set_movement(glm::vec3(0.0f));
-    g_game_state.enemies[1].set_speed(1.5f);
+    g_game_state.enemies[1].set_ai_type(SHOOTER);
+    g_game_state.enemies[1].set_ai_state(SHOOTING);
+    GLuint projectile_texture = load_texture("assets/images/bullet.png");
+    g_game_state.enemies[1].set_projectile_texture(projectile_texture);
     
     //third enemy
     g_game_state.enemies[2].set_position(glm::vec3(19.95f, -5.125f, 0.0f));
@@ -439,59 +439,72 @@ void process_input()
 }
 
 void update() {
-    if (g_app_status != RUNNING) return; // Skip updating if the game is paused or terminated
+    if (g_app_status != RUNNING) return;
 
     float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND;
     float delta_time = ticks - g_previous_ticks;
     g_previous_ticks = ticks;
 
     delta_time += g_accumulator;
+    
+    glm::vec3 player_pos = g_game_state.player->get_position();
 
     while (delta_time >= FIXED_TIMESTEP) {
-        // Update the player
         g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
 
-        // Update each enemy, their AI, and check for collisions with the player
         for (int i = 0; i < ENEMY_COUNT; i++) {
             if (!g_game_state.enemies[i].is_active()) continue;
 
-            // Activate AI behavior for the enemy
             g_game_state.enemies[i].ai_activate(g_game_state.player);
-
-            // Update the enemy's position, collisions, etc.
             g_game_state.enemies[i].update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
 
-            // Check for collisions with the player
+            // Check collision with player
             if (g_game_state.player->check_collision(&g_game_state.enemies[i])) {
                 if (g_game_state.player->get_position().y > g_game_state.enemies[i].get_position().y + g_game_state.enemies[i].get_height() / 2.0f) {
-                    // If player jumps on top of the enemy, deactivate the enemy
                     g_game_state.enemies[i].deactivate();
                     g_game_state.enemies_defeated++;
 
-                    // Check if all enemies are defeated
                     if (g_game_state.enemies_defeated == ENEMY_COUNT) {
-                        g_app_status = PAUSED;  // Pause to display "You win" message
+                        g_app_status = PAUSED;
                         std::cout << "You win!" << std::endl;
                         return;
                     }
                 } else {
-                    // Side or bottom collision; game over
-                    g_app_status = PAUSED;  // Pause to display "You lose" message
+                    g_app_status = PAUSED;
+                    std::cout << "You lose!" << std::endl;
+                    return;
+                }
+            }
+
+            // Check projectile collision as the projectile is constantly changing position while its moving
+            if (g_game_state.enemies[i].is_projectile_active()) {
+                // Projectile boundaries
+                float proj_left = g_game_state.enemies[i].get_projectile_position().x - 0.1f; // Adjust radius
+                float proj_right = g_game_state.enemies[i].get_projectile_position().x + 0.1f;
+                float proj_top = g_game_state.enemies[i].get_projectile_position().y + 0.1f;
+                float proj_bottom = g_game_state.enemies[i].get_projectile_position().y - 0.1f;
+
+                // Player boundaries
+                float player_left = player_pos.x - g_game_state.player->get_width() / 2.0f;
+                float player_right = player_pos.x + g_game_state.player->get_width() / 2.0f;
+                float player_top = player_pos.y + g_game_state.player->get_height() / 2.0f;
+                float player_bottom = player_pos.y - g_game_state.player->get_height() / 2.0f;
+
+                if (proj_right > player_left && proj_left < player_right &&
+                    proj_top > player_bottom && proj_bottom < player_top) {
+                    g_app_status = PAUSED;
                     std::cout << "You lose!" << std::endl;
                     return;
                 }
             }
         }
 
-        // Reduce delta_time by the fixed time step
         delta_time -= FIXED_TIMESTEP;
     }
 
-    // Save any remaining time to the accumulator for the next frame
     g_accumulator = delta_time;
-
-    // Update the camera to follow the player
-    float camera_y_offset = -2.0f;  // Adjust this offset to position the camera as desired
+    
+    float camera_y_offset = -2.0f;
     g_view_matrix = glm::mat4(1.0f);
     g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_game_state.player->get_position().x, -camera_y_offset, 0.0f));
     g_shader_program.set_view_matrix(g_view_matrix);

@@ -5,8 +5,8 @@
 #include "glm/glm.hpp"
 #include "ShaderProgram.h"
 enum EntityType { PLATFORM, PLAYER, ENEMY  };
-enum AIType { WALKER, GUARD, JUMPER, PATROL };
-enum AIState { WALKING, IDLE, ATTACKING, JUMPING, PATROLLING };
+enum AIType { WALKER, GUARD, JUMPER, PATROL, SHOOTER };
+enum AIState { WALKING, IDLE, ATTACKING, JUMPING, PATROLLING, SHOOTING };
 
 
 enum AnimationDirection { LEFT, RIGHT, UP, DOWN };
@@ -15,6 +15,10 @@ class Entity
 {
 private:
     bool m_is_active = true;
+    bool m_projectile_active = false;
+    glm::vec3 m_projectile_position;
+    float m_projectile_speed = 5.0f;
+    GLuint m_projectile_texture_id;
     
     int m_walking[4][4]; // 4x4 array for walking animations
 
@@ -88,6 +92,7 @@ public:
     void ai_guard(Entity *player);
     void ai_jump();
     void ai_patrol();
+    void ai_shoot(Entity *player);
     
     void normalise_movement() { m_movement = glm::normalize(m_movement); }
 
@@ -122,6 +127,9 @@ public:
     void activate()   { m_is_active = true;  };
     void deactivate() { m_is_active = false; };
     float const get_height() const { return m_height; }
+    bool is_projectile_active() const { return m_projectile_active; }
+    glm::vec3 const get_projectile_position() const { return m_projectile_position; }
+    float const get_width() const { return m_width; }
 
     // ————— SETTERS ————— //
     void const set_entity_type(EntityType new_entity_type)  { m_entity_type = new_entity_type;};
@@ -142,6 +150,7 @@ public:
     void const set_jumping_power(float new_jumping_power) { m_jumping_power = new_jumping_power;}
     void const set_width(float new_width) {m_width = new_width; }
     void const set_height(float new_height) {m_height = new_height; }
+    void set_projectile_texture(GLuint texture_id) { m_projectile_texture_id = texture_id; }
 
     // Setter for m_walking
     void set_walking(int walking[4][4])

@@ -27,6 +27,8 @@ void Entity::ai_activate(Entity *player) {
         case PATROL:
             ai_patrol();
             break;
+        case SHOOTER:
+            ai_shoot(player);
         default:
             break;
     }
@@ -65,7 +67,7 @@ void Entity::ai_guard(Entity *player)
 
 void Entity::ai_jump() {
     if (m_ai_state == JUMPING && m_collided_bottom) {
-        m_is_jumping = true;  // Set jump flag to true, which will trigger the jump in update()
+        m_is_jumping = true;
     }
 }
 
@@ -85,6 +87,15 @@ void Entity::ai_patrol() {
         }
     }
 }
+
+void Entity::ai_shoot(Entity* player) {
+    if (!m_projectile_active) {
+        m_projectile_position = m_position;
+        m_projectile_active = true;
+        m_projectile_speed = 5.0f;
+    }
+}
+
 
 // Default constructor
 Entity::Entity()
@@ -336,6 +347,22 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
     
     if (m_entity_type == ENEMY) ai_activate(player);
     
+    // Update projectile position if active
+    if (m_projectile_active) {
+        m_projectile_position.x += m_projectile_speed * delta_time;
+        
+        // Check collision with player
+        if (check_collision(player)) {
+            player->deactivate();
+            m_projectile_active = false;  // Reset projectile
+        }
+
+        // Deactivate projectile if it moves out of screen bounds
+        if (m_projectile_position.x > map->get_right_bound() || m_projectile_position.x < map->get_left_bound()) {
+            m_projectile_active = false;
+        }
+    }
+    
     if (m_animation_indices != NULL)
     {
         if (glm::length(m_movement) != 0)
@@ -379,38 +406,63 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
 
 
 void Entity::render(ShaderProgram* program) {
-    // Apply the scale transformation to the model matrix
+    // Render the main entity
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
-
-    // Scaling for visual size, without affecting the collision
     m_model_matrix = glm::scale(m_model_matrix, glm::vec3(m_visual_scale, m_visual_scale, 1.0f));
-
     program->set_model_matrix(m_model_matrix);
 
     if (m_animation_indices != NULL) {
         draw_sprite_from_texture_atlas(program, m_texture_id, m_animation_indices[m_animation_index]);
-        return;
+    } else {
+        float vertices[] = {
+            -0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
+            -0.5, -0.5, 0.5, 0.5, -0.5, 0.5
+        };
+        float tex_coords[] = {
+            0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
+            0.0, 1.0, 1.0, 0.0, 0.0, 0.0
+        };
+
+        glBindTexture(GL_TEXTURE_2D, m_texture_id);
+
+        glVertexAttribPointer(program->get_position_attribute(), 2, GL_FLOAT, false, 0, vertices);
+        glEnableVertexAttribArray(program->get_position_attribute());
+        glVertexAttribPointer(program->get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0, tex_coords);
+        glEnableVertexAttribArray(program->get_tex_coordinate_attribute());
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glDisableVertexAttribArray(program->get_position_attribute());
+        glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
     }
 
-    float vertices[] = {
-        -0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
-        -0.5, -0.5, 0.5, 0.5, -0.5, 0.5
-    };
-    float tex_coords[] = {
-        0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
-        0.0, 1.0, 1.0, 0.0, 0.0, 0.0
-    };
+    // Render the projectile if active
+    if (m_projectile_active) {
+        glm::mat4 projectile_matrix = glm::mat4(1.0f);
+        projectile_matrix = glm::translate(projectile_matrix, m_projectile_position);
+        program->set_model_matrix(projectile_matrix);
 
-    glBindTexture(GL_TEXTURE_2D, m_texture_id);
+        float projectile_vertices[] = {
+            -0.2f, -0.2f, 0.2f, -0.2f, 0.2f, 0.2f,
+            -0.2f, -0.2f, 0.2f, 0.2f, -0.2f, 0.2f
+        };
 
-    glVertexAttribPointer(program->get_position_attribute(), 2, GL_FLOAT, false, 0, vertices);
-    glEnableVertexAttribArray(program->get_position_attribute());
-    glVertexAttribPointer(program->get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0, tex_coords);
-    glEnableVertexAttribArray(program->get_tex_coordinate_attribute());
+        float projectile_tex_coords[] = {
+            0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f
+        };
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindTexture(GL_TEXTURE_2D, m_projectile_texture_id);
 
-    glDisableVertexAttribArray(program->get_position_attribute());
-    glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
+        glVertexAttribPointer(program->get_position_attribute(), 2, GL_FLOAT, false, 0, projectile_vertices);
+        glEnableVertexAttribArray(program->get_position_attribute());
+        glVertexAttribPointer(program->get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0, projectile_tex_coords);
+        glEnableVertexAttribArray(program->get_tex_coordinate_attribute());
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glDisableVertexAttribArray(program->get_position_attribute());
+        glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
+    }
 }

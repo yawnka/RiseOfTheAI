@@ -89,8 +89,8 @@ unsigned int LEVEL_1_DATA[] =
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1,
-    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2
 };
 
 
@@ -324,7 +324,7 @@ void initialise()
         {8, 9, 10, 11}, // Up
         {12, 13, 14, 15} // Down
     };
-    glm::vec3 enemy_acceleration = glm::vec3(0.0f, -4.905f, 0.0f);
+    glm::vec3 enemy_acceleration = glm::vec3(0.0f, -2.905f, 0.0f);
 
     g_game_state.enemies = new Entity[ENEMY_COUNT];
 
@@ -340,8 +340,8 @@ void initialise()
             0,                         // current animation index
             4,                         // animation column amount
             4,                         // animation row amount
-            0.35f,                     // width
-            0.35f,                     // height
+            0.65f,                     // width
+            0.65f,                     // height
             ENEMY                      // type
         );
 
@@ -349,9 +349,23 @@ void initialise()
         g_game_state.enemies[i].m_visual_scale = 1.0f; // setting scale of enemies
     }
     
-    g_game_state.enemies[0].set_position(glm::vec3(4.0f, -2.125f, 0.0f));
-    g_game_state.enemies[1].set_position(glm::vec3(11.05f, -.125f, 0.0f));
-    g_game_state.enemies[2].set_position(glm::vec3(15.8751f, -2.125f, 0.0f));
+    //first enemy
+    g_game_state.enemies[0].set_position(glm::vec3(4.0f, -5.125f, 0.0f));
+    g_game_state.enemies[0].set_ai_type(JUMPER);
+    g_game_state.enemies[0].set_ai_state(JUMPING);
+    g_game_state.enemies[0].set_jumping_power(2.0f);
+
+    //second enemy
+    g_game_state.enemies[1].set_position(glm::vec3(10.45f, -2.125f, 0.0f));
+    
+    //third enemy
+    g_game_state.enemies[2].set_position(glm::vec3(19.95f, -5.125f, 0.0f));
+    g_game_state.enemies[2].set_ai_type(GUARD);
+    g_game_state.enemies[2].set_ai_state(IDLE);
+    g_game_state.enemies[2].set_movement(glm::vec3(0.0f));
+    //g_game_state.enemies[2].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
+    g_game_state.enemies[2].set_speed(1.5f);
+    
 
     // Jumping
     g_game_state.player->set_jumping_power(5.0f);
@@ -430,56 +444,56 @@ void update() {
 
     delta_time += g_accumulator;
 
-    if (delta_time < FIXED_TIMESTEP) {
-        g_accumulator = delta_time;
-        return;
-    }
-
     while (delta_time >= FIXED_TIMESTEP) {
+        // Update the player
         g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
 
-        // Update each enemy and check for collisions with the player
+        // Update each enemy, their AI, and check for collisions with the player
         for (int i = 0; i < ENEMY_COUNT; i++) {
             if (!g_game_state.enemies[i].is_active()) continue;
 
-            // Update enemy
+            // Activate AI behavior for the enemy
+            g_game_state.enemies[i].ai_activate(g_game_state.player);
+
+            // Update the enemy's position, collisions, etc.
             g_game_state.enemies[i].update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
 
-            // Check for collisions
+            // Check for collisions with the player
             if (g_game_state.player->check_collision(&g_game_state.enemies[i])) {
                 if (g_game_state.player->get_position().y > g_game_state.enemies[i].get_position().y + g_game_state.enemies[i].get_height() / 2.0f) {
-                    // When the player jumps on top of the enemy, deactivate the enemy
+                    // If player jumps on top of the enemy, deactivate the enemy
                     g_game_state.enemies[i].deactivate();
                     g_game_state.enemies_defeated++;
 
-                    // Check if player has won by defeating all enemies
+                    // Check if all enemies are defeated
                     if (g_game_state.enemies_defeated == ENEMY_COUNT) {
-                        g_app_status = PAUSED;  // pause the game to display message
+                        g_app_status = PAUSED;  // Pause to display "You win" message
                         std::cout << "You win!" << std::endl;
-                        break;
+                        return;
                     }
                 } else {
                     // Side or bottom collision; game over
-                    g_app_status = PAUSED;  // pause the game to display message
-                    std::cout << "¥ou lose!" << std::endl;
-                    break;
+                    g_app_status = PAUSED;  // Pause to display "You lose" message
+                    std::cout << "You lose!" << std::endl;
+                    return;
                 }
             }
         }
 
+        // Reduce delta_time by the fixed time step
         delta_time -= FIXED_TIMESTEP;
     }
 
+    // Save any remaining time to the accumulator for the next frame
     g_accumulator = delta_time;
 
-    float camera_y_offset = -2.0f;
+    // Update the camera to follow the player
+    float camera_y_offset = -2.0f;  // Adjust this offset to position the camera as desired
     g_view_matrix = glm::mat4(1.0f);
-    // Camera follows the player
     g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_game_state.player->get_position().x, -camera_y_offset, 0.0f));
-
     g_shader_program.set_view_matrix(g_view_matrix);
-    print_vec3(g_game_state.player->get_position());
 }
+
 
 void render()
 {

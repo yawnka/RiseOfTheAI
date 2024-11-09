@@ -24,6 +24,10 @@ void Entity::ai_activate(Entity *player)
         case GUARD:
             ai_guard(player);
             break;
+        
+        case JUMPER:
+            ai_jump();
+            break;
             
         default:
             break;
@@ -39,7 +43,9 @@ void Entity::ai_guard(Entity *player)
 {
     switch (m_ai_state) {
         case IDLE:
-            if (glm::distance(m_position, player->get_position()) < 3.0f) m_ai_state = WALKING;
+            if (glm::distance(m_position, player->get_position()) < 3.0f) {
+                m_ai_state = WALKING;
+            }
             break;
             
         case WALKING:
@@ -57,6 +63,15 @@ void Entity::ai_guard(Entity *player)
             break;
     }
 }
+
+
+void Entity::ai_jump() {
+    if (m_ai_state == JUMPING && m_collided_bottom) {
+        m_is_jumping = true;  // Set jump flag to true, which will trigger the jump in update()
+    }
+}
+
+
 // Default constructor
 Entity::Entity()
     : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),

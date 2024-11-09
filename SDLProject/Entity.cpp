@@ -72,21 +72,26 @@ void Entity::ai_jump() {
 }
 
 void Entity::ai_patrol() {
-    if (m_ai_state != PATROLLING) return;  // Only activate if in the PATROLLING state
-    
-    // Move in the current facing direction
+    if (m_ai_state != PATROLLING) return;
+
     if (m_movement.x < 0) { // Moving left
         m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
-        if (m_collided_left) {
-            m_movement.x = 1.0f;  // Flip to move right
-        }
+        m_animation_indices = m_walking[0]; // set entity texture to left-facing animation frames
     } else { // Moving right
         m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
-        if (m_collided_right) {
-            m_movement.x = -1.0f;  // Flip to move left
-        }
+        m_animation_indices = m_walking[1]; // Set entity texture to right-facing animation frames
+    }
+
+    // Flip direction if a collision (into a wall) is detected
+    if (m_collided_left) {
+        m_movement.x = 1.0f;  // Flip to move right
+        m_animation_indices = m_walking[1]; // right-facing animation frames
+    } else if (m_collided_right) {
+        m_movement.x = -1.0f; // Flip to move left
+        m_animation_indices = m_walking[0]; // left-facing animation frames
     }
 }
+
 
 void Entity::ai_shoot(Entity* player) {
     if (!m_projectile_active) {
@@ -341,14 +346,14 @@ void const Entity::check_collision_x(Map *map)
 void Entity::update(float delta_time, Entity *player, Entity *collidable_entities, int collidable_entity_count, Map *map)
 {
     if (!m_is_active) return;
- 
-    m_collided_top    = false;
+
+    m_collided_top = false;
     m_collided_bottom = false;
-    m_collided_left   = false;
-    m_collided_right  = false;
-    
+    m_collided_left = false;
+    m_collided_right = false;
+
     if (m_entity_type == ENEMY) ai_activate(player);
-    
+
     if (m_projectile_active) {
         m_projectile_position.x += m_projectile_speed * delta_time;
 
@@ -358,47 +363,41 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
         }
     }
 
-    // Animation update (optional)
-    if (m_animation_indices != NULL)
-    {
-        if (glm::length(m_movement) != 0)
-        {
-            m_animation_time += delta_time;
-            float frames_per_second = (float) 1 / SECONDS_PER_FRAME;
-            
-            if (m_animation_time >= frames_per_second)
-            {
-                m_animation_time = 0.0f;
-                m_animation_index++;
-                
-                if (m_animation_index >= m_animation_frames)
-                {
-                    m_animation_index = 0;
-                }
+    // Updating the animation only if the entity is moving
+    if (glm::length(m_movement) != 0) {
+        m_animation_time += delta_time;
+        float frames_per_second = (float) 1 / SECONDS_PER_FRAME;
+        
+        if (m_animation_time >= frames_per_second) {
+            m_animation_time = 0.0f;
+            m_animation_index++;
+
+            if (m_animation_index >= m_animation_frames) {
+                m_animation_index = 0;
             }
         }
     }
-    
+
     m_velocity.x = m_movement.x * m_speed;
     m_velocity += m_acceleration * delta_time;
-    
+
     m_position.y += m_velocity.y * delta_time;
     check_collision_y(collidable_entities, collidable_entity_count);
     check_collision_y(map);
-    
+
     m_position.x += m_velocity.x * delta_time;
     check_collision_x(collidable_entities, collidable_entity_count);
     check_collision_x(map);
-    
-    if (m_is_jumping)
-    {
+
+    if (m_is_jumping) {
         m_is_jumping = false;
         m_velocity.y += m_jumping_power;
     }
-    
+
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
 }
+
 
 void Entity::render(ShaderProgram* program) {
     // Render the main entity

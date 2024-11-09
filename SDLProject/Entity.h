@@ -116,9 +116,11 @@ public:
     bool      const get_collided_bottom() const { return m_collided_bottom; }
     bool      const get_collided_right() const { return m_collided_right; }
     bool      const get_collided_left() const { return m_collided_left; }
-    
+    bool is_active() const { return m_is_active; }
     void activate()   { m_is_active = true;  };
     void deactivate() { m_is_active = false; };
+    float const get_height() const { return m_height; }
+
     // ————— SETTERS ————— //
     void const set_entity_type(EntityType new_entity_type)  { m_entity_type = new_entity_type;};
     void const set_ai_type(AIType new_ai_type){ m_ai_type = new_ai_type;};

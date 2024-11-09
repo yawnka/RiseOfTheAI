@@ -63,4 +63,5 @@ public:
     float const get_right_bound()  const { return m_right_bound;  }
     float const get_top_bound()    const { return m_top_bound;    }
     float const get_bottom_bound() const { return m_bottom_bound; }
+    
 };

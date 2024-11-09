@@ -460,3 +460,4 @@ void Entity::render(ShaderProgram* program) {
         glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
     }
 }
+

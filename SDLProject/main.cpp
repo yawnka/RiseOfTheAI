@@ -4,8 +4,8 @@
 #define GL_GLEXT_PROTOTYPES 1
 #define FIXED_TIMESTEP 0.0166666f
 #define PLATFORM_COUNT 11
-#define ENEMY_COUNT 3
-#define LEVEL1_WIDTH 24
+#define ENEMY_COUNT 4
+#define LEVEL1_WIDTH 30
 #define LEVEL1_HEIGHT 7
 
 #ifdef _WINDOWS
@@ -84,14 +84,15 @@ constexpr float PLATFORM_OFFSET = 5.0f;
 
 unsigned int LEVEL_1_DATA[] =
 {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1,
-    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
+
 
 
 // ————— VARIABLES ————— //
@@ -358,8 +359,8 @@ void initialise()
     g_game_state.enemies[1].set_position(glm::vec3(10.45f, -2.125f, 0.0f));
     g_game_state.enemies[1].set_ai_type(SHOOTER);
     g_game_state.enemies[1].set_ai_state(SHOOTING);
-    GLuint projectile_texture = load_texture("assets/images/bullet.png");
-    g_game_state.enemies[1].set_projectile_texture(projectile_texture);
+    GLuint projectile_texture1 = load_texture("assets/images/bullet.png");
+    g_game_state.enemies[1].set_projectile_texture(projectile_texture1);
     
     //third enemy
     g_game_state.enemies[2].set_position(glm::vec3(19.95f, -5.125f, 0.0f));
@@ -367,6 +368,13 @@ void initialise()
     g_game_state.enemies[2].set_ai_state(PATROLLING);
     g_game_state.enemies[2].set_movement(glm::vec3(-1.0f, 0.0f, 0.0f));
     g_game_state.enemies[2].set_speed(1.5f);
+    
+    //fourth enemy
+    g_game_state.enemies[3].set_position(glm::vec3(12.95f, -4.125f, 0.0f));
+    g_game_state.enemies[3].set_ai_type(SHOOTER);
+    g_game_state.enemies[3].set_ai_state(SHOOTING);
+    GLuint projectile_texture2 = load_texture("assets/images/bullet2.png");
+    g_game_state.enemies[3].set_projectile_texture(projectile_texture2);
     
 
     // Jumping

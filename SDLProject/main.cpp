@@ -66,6 +66,7 @@ constexpr char SPRITESHEET_FILEPATH[] = "assets/images/player0.png",
            BGM_FILEPATH[]         = "assets/audio/dooblydoo.mp3",
            JUMP_SFX_FILEPATH[]    = "assets/audio/bounce.wav",
            PLATFORM_FILEPATH[]    = "assets/images/platformPack_tile027.png",
+           ENEMY1_FILEPATH[] = "assets/images/enemy.png",
            ENEMY_FILEPATH[]       = "assets/images/soph.png";
 
 constexpr int NUMBER_OF_TEXTURES = 1;
@@ -216,6 +217,36 @@ void initialise()
     
     g_game_state.player->m_visual_scale = 2.0f; // Scale the player to twice the size
 
+    // ————— ENEMY 1 SET-UP ————— //
+
+    GLuint enemy1_texture_id = load_texture(ENEMY1_FILEPATH);
+
+    int enemy_walking_animation[4][4] =
+    {
+        { 8, 9, 10, 11 },  // for George to move to the left,
+        { 0, 1, 2, 3}, // for George to move to the right,
+        { 8, 9, 10, 11 }, // for George to move upwards,
+        { 12, 13, 14, 15 }   // for George to move downwards
+    };
+
+    g_game_state.enemies = new Entity(
+        enemy1_texture_id,         // texture id
+        5.0f,                      // speed
+        acceleration,              // acceleration
+        3.0f,                      // jumping power
+        enemy_walking_animation,  // animation index sets
+        0.0f,                      // animation time
+        4,                         // animation frame amount
+        0,                         // current animation index
+        4,                         // animation column amount
+        4,                         // animation row amount
+        0.75f,                      // width (increase this value to scale up the player)
+        0.75f,                      // height (increase this value to scale up the player)
+        PLAYER
+    );
+    
+    g_game_state.enemies->m_visual_scale = 1.0f; // Scale the player to twice the size
+
 
     // Jumping
     g_game_state.player->set_jumping_power(5.0f);
@@ -228,21 +259,6 @@ void initialise()
     
     g_game_state.jump_sfx = Mix_LoadWAV(JUMP_SFX_FILEPATH);
     
-    // ––––– SOPHIE ––––– //
-    GLuint enemy_texture_id = load_texture(ENEMY_FILEPATH);
-
-    g_game_state.enemies = new Entity[ENEMY_COUNT];
-
-    for (int i = 0; i < ENEMY_COUNT; i++)
-    {
-    g_game_state.enemies[i] =  Entity(enemy_texture_id, 1.0f, 1.0f, 1.0f, ENEMY, GUARD, IDLE);
-    }
-
-
-    g_game_state.enemies[0].set_position(glm::vec3(3.0f, 0.0f, 0.0f));
-    g_game_state.enemies[0].set_movement(glm::vec3(0.0f));
-    g_game_state.enemies[0].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
-    
     // ————— BLENDING ————— //
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -251,6 +267,7 @@ void initialise()
 void process_input()
 {
     g_game_state.player->set_movement(glm::vec3(0.0f));
+    g_game_state.enemies->set_movement(glm::vec3(0.0f));
     
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -270,9 +287,10 @@ void process_input()
                         
                     case SDLK_SPACE:
                         // Jump
-                        if (g_game_state.player->get_collided_bottom())
+                        if (g_game_state.enemies->get_collided_bottom())
                         {
                             g_game_state.player->jump();
+                            //g_game_state.enemies->jump();
                             Mix_PlayChannel(-1, g_game_state.jump_sfx, 0);
                         }
                         break;
@@ -288,8 +306,14 @@ void process_input()
     
     const Uint8 *key_state = SDL_GetKeyboardState(NULL);
 
-    if (key_state[SDL_SCANCODE_LEFT])       g_game_state.player->move_left();
-    else if (key_state[SDL_SCANCODE_RIGHT]) g_game_state.player->move_right();
+    if (key_state[SDL_SCANCODE_LEFT])        {
+        g_game_state.player->move_left();
+        //g_game_state.enemies->move_left();
+    }
+    else if (key_state[SDL_SCANCODE_RIGHT]) {
+        g_game_state.player->move_right();
+        //g_game_state.enemies->move_right();
+    }
          
     if (glm::length(g_game_state.player->get_movement()) > 1.0f)
         g_game_state.player->normalise_movement();

@@ -447,6 +447,7 @@ void update() {
     delta_time += g_accumulator;
     
     glm::vec3 player_pos = g_game_state.player->get_position();
+    const float map_lower_boundary = -6.0f; // sets fall of map y position
 
     while (delta_time >= FIXED_TIMESTEP) {
         g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
@@ -470,12 +471,10 @@ void update() {
 
                     if (g_game_state.enemies_defeated == ENEMY_COUNT) {
                         g_app_status = PAUSED;
-                        std::cout << "You win!" << std::endl;
                         return;
                     }
                 } else {
                     g_app_status = PAUSED;
-                    std::cout << "You lose!" << std::endl;
                     return;
                 }
             }
@@ -498,10 +497,15 @@ void update() {
                 if (proj_right > player_left && proj_left < player_right &&
                     proj_top > player_bottom && proj_bottom < player_top) {
                     g_app_status = PAUSED;
-                    std::cout << "You lose!" << std::endl;
                     return;
                 }
             }
+        }
+        //handles if player falls off map
+        if (g_game_state.player->get_position().y < map_lower_boundary) {
+            g_app_status = PAUSED;
+            std::cout << "You lose! Player fell out of bounds." << std::endl;
+            return;
         }
 
         delta_time -= FIXED_TIMESTEP;

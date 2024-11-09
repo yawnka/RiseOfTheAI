@@ -4,7 +4,7 @@
 #include "Map.h"
 #include "glm/glm.hpp"
 #include "ShaderProgram.h"
-enum EntityType { PLATFORM, PLAYER, ENEMY  };
+enum EntityType { PLATFORM, PLAYER, ENEMY, PROJECTILE  };
 enum AIType { WALKER, GUARD, JUMPER, PATROL, SHOOTER };
 enum AIState { WALKING, IDLE, ATTACKING, JUMPING, PATROLLING, SHOOTING };
 
@@ -14,8 +14,8 @@ enum AnimationDirection { LEFT, RIGHT, UP, DOWN };
 class Entity
 {
 private:
+    bool m_projectile_active;
     bool m_is_active = true;
-    bool m_projectile_active = false;
     glm::vec3 m_projectile_position;
     float m_projectile_speed = 5.0f;
     GLuint m_projectile_texture_id;
@@ -107,6 +107,7 @@ public:
     void move_down() { m_movement.y = -1.0f; face_down(); }
     
     void const jump() { m_is_jumping = true; }
+    
 
     // ————— GETTERS ————— //
     EntityType const get_entity_type()    const { return m_entity_type;   };
@@ -151,6 +152,7 @@ public:
     void const set_width(float new_width) {m_width = new_width; }
     void const set_height(float new_height) {m_height = new_height; }
     void set_projectile_texture(GLuint texture_id) { m_projectile_texture_id = texture_id; }
+    void set_projectile_active(bool active) { m_projectile_active = active; }
 
     // Setter for m_walking
     void set_walking(int walking[4][4])

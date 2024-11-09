@@ -458,11 +458,16 @@ void update() {
             g_game_state.enemies[i].ai_activate(g_game_state.player);
             g_game_state.enemies[i].update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
 
-            // Check collision with player
+            // Check if player lands on top of the enemy to defeat it
             if (g_game_state.player->check_collision(&g_game_state.enemies[i])) {
                 if (g_game_state.player->get_position().y > g_game_state.enemies[i].get_position().y + g_game_state.enemies[i].get_height() / 2.0f) {
                     g_game_state.enemies[i].deactivate();
                     g_game_state.enemies_defeated++;
+
+                    // Ensure the projectile is deactivated if the enemy is a shooter
+                    if (g_game_state.enemies[i].get_ai_type() == SHOOTER) {
+                        g_game_state.enemies[i].set_projectile_active(false);
+                    }
 
                     if (g_game_state.enemies_defeated == ENEMY_COUNT) {
                         g_app_status = PAUSED;
@@ -476,10 +481,10 @@ void update() {
                 }
             }
 
-            // Check projectile collision as the projectile is constantly changing position while its moving
+            // Check for collision with the projectile
             if (g_game_state.enemies[i].is_projectile_active()) {
                 // Projectile boundaries
-                float proj_left = g_game_state.enemies[i].get_projectile_position().x - 0.1f; // Adjust radius
+                float proj_left = g_game_state.enemies[i].get_projectile_position().x - 0.1f;
                 float proj_right = g_game_state.enemies[i].get_projectile_position().x + 0.1f;
                 float proj_top = g_game_state.enemies[i].get_projectile_position().y + 0.1f;
                 float proj_bottom = g_game_state.enemies[i].get_projectile_position().y - 0.1f;
@@ -490,6 +495,7 @@ void update() {
                 float player_top = player_pos.y + g_game_state.player->get_height() / 2.0f;
                 float player_bottom = player_pos.y - g_game_state.player->get_height() / 2.0f;
 
+                // Check collision between projectile and player
                 if (proj_right > player_left && proj_left < player_right &&
                     proj_top > player_bottom && proj_bottom < player_top) {
                     g_app_status = PAUSED;

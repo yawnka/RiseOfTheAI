@@ -224,36 +224,38 @@ void const Entity::check_collision_y(Entity *collidable_entities, int collidable
     }
 }
 
-void const Entity::check_collision_x(Entity *collidable_entities, int collidable_entity_count)
-{
-    for (int i = 0; i < collidable_entity_count; i++)
-    {
+void const Entity::check_collision_x(Entity *collidable_entities, int collidable_entity_count) {
+    for (int i = 0; i < collidable_entity_count; i++) {
         Entity *collidable_entity = &collidable_entities[i];
-        
-        if (check_collision(collidable_entity))
-        {
+
+        // Skip inactive entities
+        if (!collidable_entity->is_active()) continue;
+
+        if (check_collision(collidable_entity)) {
             float x_distance = fabs(m_position.x - collidable_entity->m_position.x);
             float x_overlap = fabs(x_distance - (m_width / 2.0f) - (collidable_entity->m_width / 2.0f));
-            if (m_velocity.x > 0)
-            {
-                m_position.x     -= x_overlap;
-                m_velocity.x      = 0;
 
-                // Collision!
-                m_collided_right  = true;
-                
-            } else if (m_velocity.x < 0)
-            {
-                m_position.x    += x_overlap;
-                m_velocity.x     = 0;
- 
-                // Collision!
-                m_collided_left  = true;
+            if (m_velocity.x > 0) {
+                m_position.x -= x_overlap;
+                m_velocity.x = 0;
+                m_collided_right = true;
+            } else if (m_velocity.x < 0) {
+                m_position.x += x_overlap;
+                m_velocity.x = 0;
+                m_collided_left = true;
+            }
+
+            // Check if the collision is with a projectile
+            if (collidable_entity->m_entity_type == PROJECTILE) {
+                // Deactivate both the player and the projectile upon collision since they are one unit
+                if (this->m_entity_type == PLAYER) {
+                    this->deactivate();
+                }
+                collidable_entity->deactivate();
             }
         }
     }
 }
-
 
 void const Entity::check_collision_y(Map *map)
 {
@@ -347,22 +349,16 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
     
     if (m_entity_type == ENEMY) ai_activate(player);
     
-    // Update projectile position if active
     if (m_projectile_active) {
         m_projectile_position.x += m_projectile_speed * delta_time;
-        
-        // Check collision with player
-        if (check_collision(player)) {
-            player->deactivate();
-            m_projectile_active = false;  // Reset projectile
-        }
 
         // Deactivate projectile if it moves out of screen bounds
         if (m_projectile_position.x > map->get_right_bound() || m_projectile_position.x < map->get_left_bound()) {
             m_projectile_active = false;
         }
     }
-    
+
+    // Animation update (optional)
     if (m_animation_indices != NULL)
     {
         if (glm::length(m_movement) != 0)
@@ -403,7 +399,6 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
 }
-
 
 void Entity::render(ShaderProgram* program) {
     // Render the main entity

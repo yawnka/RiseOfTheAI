@@ -58,7 +58,7 @@ constexpr int VIEWPORT_X = 0,
           VIEWPORT_WIDTH  = WINDOW_WIDTH,
           VIEWPORT_HEIGHT = WINDOW_HEIGHT;
 
-constexpr char GAME_WINDOW_NAME[] = "Hello, Maps!";
+constexpr char GAME_WINDOW_NAME[] = "Rise of the AI Jungle";
 
 constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
            F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
@@ -307,9 +307,9 @@ void initialise()
         0,                         // current animation index
         4,                         // animation column amount
         4,                         // animation row amount
-        0.75f,                      // width (increase this value to scale up the player)
-        0.75f,                      // height (increase this value to scale up the player)
-        ENEMY
+        0.65f,                      // width (increase this value to scale up the player)
+        0.65f,                      // height (increase this value to scale up the player)
+        PLAYER
     );
     
     g_game_state.player->m_visual_scale = 2.0f; // Scale the player to twice the size

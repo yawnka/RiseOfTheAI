@@ -1,3 +1,12 @@
+/**
+* Author: Yanka Sikder
+* Assignment: Rise of the AI
+* Date due: 2024-11-9, 11:59pm
+* I pledge that I have completed this assignment without
+* collaborating with anyone else, in conformance with the
+* NYU School of Engineering Policies and Procedures on
+* Academic Misconduct.
+**/
 #define GL_SILENCE_DEPRECATION
 #define STB_IMAGE_IMPLEMENTATION
 #define LOG(argument) std::cout << argument << '\n'
@@ -307,12 +316,12 @@ void initialise()
         0,                         // current animation index
         4,                         // animation column amount
         4,                         // animation row amount
-        0.65f,                      // width (increase this value to scale up the player)
-        0.65f,                      // height (increase this value to scale up the player)
+        0.65f,                      // width
+        0.65f,                      // height
         PLAYER
     );
     
-    g_game_state.player->m_visual_scale = 2.0f; // Scale the player to twice the size
+    g_game_state.player->m_visual_scale = 2.0f; // scaling player
     g_game_state.player->set_position(glm::vec3(2.0f, 0.0f, 0.0f));
 
     // ————— ENEMIES SET-UP ————— //
@@ -320,7 +329,7 @@ void initialise()
 
     int enemy_walking_animation[4][4] = {
         {8, 9, 10, 11}, // Left
-        {4, 5, 6, 7},   // Rights
+        {4, 5, 6, 7},   // Right
         {0, 1, 2, 3}, // Up
         {12, 13, 14, 15} // Down
     };
@@ -344,9 +353,7 @@ void initialise()
             0.65f,                     // height
             ENEMY                      // type
         );
-
-        //g_game_state.enemies[i].set_position(glm::vec3(4.0f + i * 2.0f, 1.5f, 0.0f)); // pos of enenmies
-        g_game_state.enemies[i].m_visual_scale = 1.0f; // setting scale of enemies
+        g_game_state.enemies[i].m_visual_scale = 1.0f; // scale of enemies
     }
     
     //first enemy
@@ -455,7 +462,7 @@ void update() {
     delta_time += g_accumulator;
     
     glm::vec3 player_pos = g_game_state.player->get_position();
-    const float map_lower_boundary = -6.0f; // sets fall of map y position
+    const float map_lower_boundary = -6.0f; // sets y position for map cutoff
 
     while (delta_time >= FIXED_TIMESTEP) {
         g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT, g_game_state.map);
@@ -618,4 +625,3 @@ int main(int argc, char* argv[])
     shutdown();
     return 0;
 }
-
